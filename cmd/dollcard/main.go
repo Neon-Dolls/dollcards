@@ -78,7 +78,12 @@ func runCreate(args []string) {
 	}
 	idv := *id
 	if idv == "" {
-		idv = dollcard.GenerateID()
+		var err error
+		idv, err = dollcard.GenerateID()
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "error: generate ID: %v\n", err)
+			os.Exit(1)
+		}
 	}
 	if err := dollcard.Create(dir, idv, nm); err != nil {
 		fmt.Fprintf(os.Stderr, "error: create %q: %v\n", dir, err)

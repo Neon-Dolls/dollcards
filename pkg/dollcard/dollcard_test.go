@@ -19,9 +19,9 @@ import (
 // validCard returns a canonical, fully-valid v1 card file map.
 func validCard() map[string][]byte {
 	return map[string][]byte{
-		"card.json":     []byte(`{"version":1}`),
-		"identity.json": []byte(`{"doll_id":"d-1","canonical_name":"Ruby"}`),
-		"soul.md":       []byte("# Soul\n\nSome prose.\n"),
+		"card.json":      []byte(`{"version":1}`),
+		"identity.json":  []byte(`{"doll_id":"d-1","canonical_name":"Ruby"}`),
+		"soul.md":        []byte("# Soul\n\nSome prose.\n"),
 		"owner/owner.md": []byte("# Owner\n\nSome prose.\n"),
 	}
 }
@@ -69,7 +69,6 @@ func TestValidate_MissingRequiredFiles(t *testing.T) {
 		}
 	}
 }
-
 
 // ── Validate: card.json version ──
 
@@ -175,7 +174,6 @@ func TestValidate_Skills(t *testing.T) {
 	}
 }
 
-
 // ── safeRelPath ──
 
 func TestSafeRelPath(t *testing.T) {
@@ -189,11 +187,11 @@ func TestSafeRelPath(t *testing.T) {
 		{"a/b/c.txt", "a/b/c.txt", false},
 		{"a\\b\\c.txt", "a/b/c.txt", false}, // backslash normalized
 		{"./owner/owner.md", "owner/owner.md", false},
-		{"//x", "", true},            // absolute
-		{"/etc/passwd", "", true},    // absolute
-		{"a/../../etc", "", true},    // traversal
-		{"C:\\x", "", true},        // drive prefix
-		{"..", "", true},             // traversal
+		{"//x", "", true},         // absolute
+		{"/etc/passwd", "", true}, // absolute
+		{"a/../../etc", "", true}, // traversal
+		{"C:\\x", "", true},       // drive prefix
+		{"..", "", true},          // traversal
 		{"a/./b", "a/b", false},
 	}
 	for _, c := range cases {
@@ -291,7 +289,10 @@ func TestCreate_RequiresName(t *testing.T) {
 }
 
 func TestGenerateID_Shape(t *testing.T) {
-	id := GenerateID()
+	id, err := GenerateID()
+	if err != nil {
+		t.Fatalf("GenerateID() returned error: %v", err)
+	}
 	// UUIDv4: 8-4-4-4-12, version digit 4 in third group.
 	parts := strings.Split(id, "-")
 	if len(parts) != 5 {
@@ -304,7 +305,6 @@ func TestGenerateID_Shape(t *testing.T) {
 		t.Errorf("GenerateID() = %q, version nibble = %c, want 4", id, parts[2][0])
 	}
 }
-
 
 // ── Compress / Extract ──
 
