@@ -1,0 +1,57 @@
+name: CI
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        go-version: [1.25.x]
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Set up Go
+      uses: actions/setup-go@v5
+      with:
+        go-version: ${{ matrix.go-version }}
+
+    - name: Check gofmt
+      run: |
+        gofmt -l .
+        if [ -n "$(gofmt -l .)" ]; then
+          echo "gofmt check failed: files need formatting"
+          gofmt -d .
+          exit 1
+        fi
+
+    - name: Go vet
+      run: go vet ./...
+
+    - name: Build
+      run: go build ./...
+
+    - name: Test with coverage
+      run: |
+        go test -race -coverprofile=coverage.out -covermode=atomic ./...
+        # Validate every DollCard under examples/
+        for dir in examples/*; do
+          if [ -d "$dir" ]; then
+            echo "Validating $dir"
+            go run ./cmd/dollcard validate "$dir"
+          fi
+        done
+        # Check package coverage for pkg/dollcard
+        pkg_coverage=$(go tool cover -func=coverage.out | grep pkg/dollcard | awk '{print $3}' | sed 's/%//')
+        echo "pkg/dollcard coverage: ${pkg_coverage}%"
+        if (( $(echo "$pkg_coverage < 90" | bc -l) )); then
+          echo "Error: pkg/dollcard coverage is below 90%"
+          exit 1
+        fi
+
+    
