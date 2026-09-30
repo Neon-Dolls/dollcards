@@ -77,9 +77,12 @@ func Create(dir, dollID, canonName string) error {
 
 // GenerateID returns a fresh random doll_id (UUIDv4-shaped). It is a helper
 // so the CLI can create a card with a stable identifier when none is given.
-func GenerateID() string {
+// Returns an error if crypto/rand.Read fails.
+func GenerateID() (string, error) {
 	data := make([]byte, 16)
-	rand.Read(data)
+	if _, err := rand.Read(data); err != nil {
+		return "", fmt.Errorf("dollcard: generate ID: %w", err)
+	}
 	data[6] = byte(int(data[6])&0x0f | 0x40) // version 4
 	data[8] = byte(int(data[8])&0x3f | 0x80) // variant 1
 	hex := "0123456789abcdef"
@@ -92,5 +95,5 @@ func GenerateID() string {
 			sb.WriteByte(byte('-'))
 		}
 	}
-	return sb.String()
+	return sb.String(), nil
 }

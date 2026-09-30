@@ -1,0 +1,58 @@
+name: CI
+
+on:
+  schedule:
+    - cron: '0 0 * * *'  # Daily at midnight
+  workflow_dispatch:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        go-version: [1.22.x, 1.23.x, 1.24.x]
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Set up Go
+      uses: actions/setup-go@v5
+      with:
+        go-version: ${{ matrix.go-version }}
+
+    - name: Check gofmt
+      run: |
+        gofmt -l .
+        if [ -n "$(gofmt -l .)" ]; then
+          echo "gofmt check failed: files need formatting"
+          gofmt -d .
+          exit 1
+        fi
+
+    - name: Go vet
+      run: go vet ./...
+
+    - name: Build
+      run: go build ./...
+
+    - name: Test with coverage
+      run: |
+        go test -race -coverprofile=coverage.out -covermode=atomic ./...
+        # Validate every DollCard under examples/
+        for dir in examples/*; do
+          if [ -d "$dir" ]; then
+            echo "Validating $dir"
+            go run ./cmd/dollcard validate "$dir"
+          fi
+        done
+
+    - name: Upload coverage to Codecov
+      uses: codecov/codecov-action@v4
+      with:
+        file: coverage.out
+        flags: unittests
+        name: codecov-umbrella
+        fail_ci_if_error: true
