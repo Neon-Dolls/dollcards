@@ -60,11 +60,12 @@ jobs:
             go run ./cmd/dollcard validate "$dir"
           fi
         done
+        # Check package coverage for pkg/dollcard
+        pkg_coverage=$(go tool cover -func=coverage.out | grep pkg/dollcard | awk '{print $3}' | sed 's/%//')
+        echo "pkg/dollcard coverage: ${pkg_coverage}%"
+        if (( $(echo "$pkg_coverage < 90" | bc -l) )); then
+          echo "Error: pkg/dollcard coverage is below 90%"
+          exit 1
+        fi
 
-    - name: Upload coverage to Codecov
-      uses: codecov/codecov-action@v4
-      with:
-        file: coverage.out
-        flags: unittests
-        name: codecov-umbrella
-        fail_ci_if_error: true
+    
