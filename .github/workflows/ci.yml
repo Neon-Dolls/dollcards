@@ -1,8 +1,6 @@
 name: CI
 
 on:
-  schedule:
-    - cron: '0 0 * * *'  # Daily at midnight
   workflow_dispatch:
   push:
     branches: [ main ]
@@ -17,18 +15,6 @@ jobs:
         go-version: [1.25.x]
     steps:
     - uses: actions/checkout@v4
-
-    - name: Debug checkout
-      run: |
-        echo "Current directory: $(pwd)"
-        echo "Files and directories:"
-        ls -la
-        if [ -d .git ]; then
-          echo ".git directory exists"
-          git status
-        else
-          echo ".git directory does NOT exist"
-        fi
 
     - name: Set up Go
       uses: actions/setup-go@v5
