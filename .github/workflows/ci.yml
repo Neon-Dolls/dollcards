@@ -18,6 +18,18 @@ jobs:
     steps:
     - uses: actions/checkout@v4
 
+    - name: Debug checkout
+      run: |
+        echo "Current directory: $(pwd)"
+        echo "Files and directories:"
+        ls -la
+        if [ -d .git ]; then
+          echo ".git directory exists"
+          git status
+        else
+          echo ".git directory does NOT exist"
+        fi
+
     - name: Set up Go
       uses: actions/setup-go@v5
       with:
